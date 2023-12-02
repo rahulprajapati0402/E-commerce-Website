@@ -6,7 +6,7 @@ from django.contrib.auth import login, authenticate, logout
 from django.shortcuts import get_object_or_404
 from django.views import View
 from accounts.models import Profile, Cart, CartItem
-from products.models import Product, SizeVariant, ColourVariant
+from products.models import Product, SizeVariant, ColourVariant, Coupon
 
 
 def login_page(request):
@@ -91,38 +91,61 @@ def activate_email(request, email_token):
 
 def add_to_cart(request, uid):
     user = request.user
-    colour_variant = request.GET.get('colour')
-    size_variant = request.GET.get('size')
-    print(size_variant)
-    print(colour_variant)
-    product = Product.objects.get(uid=uid)
-    cart, _ = Cart.objects.get_or_create(user=user, is_paid=False)
-    cart_item = CartItem.objects.create(cart=cart, product=product)
-    if size_variant:
-        variant = SizeVariant.objects.get(size_name=size_variant)
-        cart_item.size_variant = variant
-        cart_item.save()
-    if colour_variant:
-        variant = ColourVariant.objects.get(colur_name=colour_variant)
-        cart_item.colour_variant = variant
-        cart_item.save()
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+    if user.is_authenticated:
+        colour_variant = request.GET.get('colour')
+        size_variant = request.GET.get('size')
+        product = Product.objects.get(uid=uid)
+        cart, _ = Cart.objects.get_or_create(user=user, is_paid=False)
+        cart_item = CartItem.objects.create(cart=cart, product=product)
+        if size_variant:
+            variant = SizeVariant.objects.get(size_name=size_variant)
+            cart_item.size_variant = variant
+            cart_item.save()
+        if colour_variant:
+            variant = ColourVariant.objects.get(colur_name=colour_variant)
+            cart_item.colour_variant = variant
+            cart_item.save()
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+    return redirect('login-url')
 
 
-def remove_from_cart(request, uid):
+def remove_from_cart(request, cart_item_uid):
     user = request.user
-    product = Product.objects.get(uid=uid)
-    cart_item = CartItem.objects.filter(cart__user=user, product=product)
-    cart_item.delete()
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+    if user.is_authenticated:
+        cart_item = CartItem.objects.filter(cart__user=user, uid=cart_item_uid)
+        cart_item.delete()
+        return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+    return redirect('login-url')
 
 
 def cart_page(request):
     user = request.user
-    cart_items = CartItem.objects.filter(cart__is_paid=False, cart__user=user)
-    cart_total_price = user.carts.first().get_cart_total() if user.carts.first() else 0
-    context = {
-        "cart_items": cart_items,
-        "cart_total_price": cart_total_price
-    }
-    return render(request, "accounts/cart.html", context)
+    if user.is_authenticated:
+        cart = Cart.objects.get(user=user, is_paid=False)
+        if request.method == "POST":
+            coupon = request.POST.get("coupon")
+            coupon_obj = Coupon.objects.filter(coupon_code=coupon).first()
+            if not coupon_obj:
+                messages.warning(request, "Coupon not found.")
+                return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+            if not cart.get_cart_total() > coupon_obj.min_price:
+                messages.warning(request, f"Minimum amount to apply coupon is {coupon_obj.min_price}.")
+                return HttpResponseRedirect(request.META.get("HTTP_REFERER"))
+            if cart.coupon == coupon_obj:
+                messages.warning(request, "Coupon already applied.")
+                return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+            if coupon_obj:
+                cart.coupon = coupon_obj
+                cart.save()
+                messages.success(request, "Coupon added successfully.")
+        context = {"cart": cart}
+        return render(request, "accounts/cart.html", context)
+    return redirect('login-url')
+
+
+def remove_coupon(request, cart_uid):
+    cart = Cart.objects.get(uid=cart_uid)
+    cart.coupon = None
+    cart.save()
+    messages.success(request, "Coupon removed successfully.")
+    return HttpResponseRedirect(request.META.get("HTTP_REFERER"))

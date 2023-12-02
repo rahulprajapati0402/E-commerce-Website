@@ -106,7 +106,7 @@
 								<p class="d-none d-md-block mb-0">Wishlist</p>
 							</a>
 
-							<a href=" {% if request.user.is_authenticated %} {% url 'cart-url' %} {% else %} {% url 'login-url' %} {% endif %}" class="border rounded py-1 px-3 nav-link d-flex align-items-center">
+							<a href=" {% url 'cart-url' %} " class="border rounded py-1 px-3 nav-link d-flex align-items-center">
 								<i class="fas fa-shopping-cart m-1 me-md-2"></i>
 								<p class="d-none d-md-block mb-0">My cart {% if request.user.is_authenticated %} ({{request.user.profile.get_cart_count}}) {% endif %} </p>
 							</a>
