@@ -145,10 +145,11 @@ def cart_page(request):
                 cart.save()
                 messages.success(request, "Coupon added successfully.")
         payment = None
+        razorpay_key_id = settings.RAZORPAY_KEY_ID
         if cart:
             client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_SECRET_KEY))
             payment = client.order.create({"amount": cart.get_cart_total() * 100, "currency": "INR", "payment_capture": 1})
-        context = {"cart": cart, "payment": payment}
+        context = {"cart": cart, "payment": payment, "razorpay_key_id": razorpay_key_id}
         return render(request, "accounts/cart.html", context)
     return redirect('login-url')
 
