@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 10px;
+            background-color: #f2f2f2;
+        }
+
+        section {
+            margin: 20px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #ddd;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        footer {
+            margin-top: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Invoice</h1>
+    </header>
+
+    <section>
+        <h2>Bill To:</h2>
+        <p>Customer Name<br>
+            Customer Address<br>
+            City, State, ZIP<br>
+            Email: customer@example.com</p>
+    </section>
+
+    <section>
+        <h2>Invoice Details:</h2>
+        <p><strong>Invoice Number:</strong> 123456<br>
+            <strong>Invoice Date:</strong> January 1, 2024
+        </p>
+    </section>
+
+    <section>
+        <h2>Products/Services:</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Quantity</th>
+                    <th>Unit Price</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Product 1</td>
+                    <td>2</td>
+                    <td>$50.00</td>
+                    <td>$100.00</td>
+                </tr>
+                <tr>
+                    <td>Product 2</td>
+                    <td>1</td>
+                    <td>$30.00</td>
+                    <td>$30.00</td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+
+    <section>
+        <h2>Payment Details:</h2>
+        <p><strong>Total Amount:</strong> $130.00<br>
+            <strong>Payment Due:</strong> January 15, 2024
+        </p>
+    </section>
+
+    <footer>
+        <p>Thank you for your business!</p>
+    </footer>
+
+</body>
+
+</html>
