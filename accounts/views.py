@@ -1,10 +1,12 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth.models import User
-from django.http import HttpResponseRedirect, HttpResponse
+import razorpay
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login, authenticate, logout
-from django.shortcuts import get_object_or_404
+from django.contrib.auth.models import User
+from django.http import HttpResponseRedirect, HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views import View
+
 from accounts.models import Profile, Cart, CartItem
 from products.models import Product, SizeVariant, ColourVariant, Coupon
 
@@ -121,7 +123,11 @@ def remove_from_cart(request, cart_item_uid):
 def cart_page(request):
     user = request.user
     if user.is_authenticated:
-        cart = Cart.objects.get(user=user, is_paid=False)
+        cart = None
+        try:
+            cart = Cart.objects.get(user=user, is_paid=False)
+        except Exception as e:
+            print(e)
         if request.method == "POST":
             coupon = request.POST.get("coupon")
             coupon_obj = Coupon.objects.filter(coupon_code=coupon).first()
@@ -138,7 +144,11 @@ def cart_page(request):
                 cart.coupon = coupon_obj
                 cart.save()
                 messages.success(request, "Coupon added successfully.")
-        context = {"cart": cart}
+        payment = None
+        if cart:
+            client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_SECRET_KEY))
+            payment = client.order.create({"amount": cart.get_cart_total() * 100, "currency": "INR", "payment_capture": 1})
+        context = {"cart": cart, "payment": payment}
         return render(request, "accounts/cart.html", context)
     return redirect('login-url')
 
@@ -149,3 +159,11 @@ def remove_coupon(request, cart_uid):
     cart.save()
     messages.success(request, "Coupon removed successfully.")
     return HttpResponseRedirect(request.META.get("HTTP_REFERER"))
+
+
+def payment_success(request):
+    order_id = request.GET.get("order_id")
+    cart_obj = Cart.objects.get(razorpay_order_id=order_id)
+    cart_obj.is_paid=True
+    cart_obj.save()
+    return HttpResponse("Payment Success.")
